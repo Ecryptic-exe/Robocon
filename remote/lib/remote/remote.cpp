@@ -221,7 +221,7 @@ void remote::encode_joysticks() {
 void remote::decode_butts(){
 
     data = new bool[hc165->getNumBits()];
-    data = hc165->read();
+    data = hc165->getData();
 
     DigitalIn HomePin(home_pin);
 
@@ -314,8 +314,8 @@ int8_t remote::to_percentage(int value, int max, int mid, int min){
   }
 
   //map(value, fromLow, fromHigh, toLow, toHigh)
-  Map temp(min, max, -100, 100);
-  return (int8_t)temp.Calculate(value);
+  Map temperature(min, max, -100, 100);
+  return (int8_t)temperature.Calculate(value);
 }
 
 void remote::cal_battery_volt(){
@@ -332,8 +332,8 @@ void remote::cal_battery_volt(){
 
 
     volt = (float)((temp*(3.3f/4096.0f))*((resistor_1 + resistor_2)/resistor_2));
-    Map volt(volt_min*1000, volt_max*1000, 0.0f, 100.0f*1000)
-    volt_percentage = volt.Calculate(volt*1000)/1000.0f;
+    Map voltage(volt_min*1000, volt_max*1000, 0.0f, 100.0f*1000);
+    volt_percentage = voltage.Calculate(volt*1000)/1000.0f;
 
 }
 

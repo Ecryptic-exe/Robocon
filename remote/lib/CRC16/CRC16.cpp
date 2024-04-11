@@ -37,13 +37,13 @@ uint8_t* CRC16::encode(uint8_t* data, int len){
 
 bool CRC16::decode(uint8_t* data){
     int size = sizeof(data);
-    uint8_t buff[size - 2];
+    uint8_t buf[size - 2];
 
     for(int i = 0; i < size - 2; i++){
-        buff[i] = data[i];
+        buf[i] = data[i];
     }
 
-    uint8_t* feedback = encode(buff, sizeof(buff));
+    uint8_t* feedback = encode(buf, sizeof(buf));
 
     for(int i = 0; i < size; i++){
         if(data[i] != feedback[i]){
@@ -55,26 +55,26 @@ bool CRC16::decode(uint8_t* data){
 }
 
 uint8_t* CRC16::modbus_encode(uint8_t* data, int len){
-    uint8_t buff;
+    uint8_t buf;
     uint8_t* result = encode(data, len);
     int size = sizeof(result);
     
-    buff = result[size - 2];
+    buf = result[size - 2];
     result[size - 2] = result[size - 1];
-    result[size - 1] = buff;
+    result[size - 1] = buf;
 
     return result;
 }
 
 bool CRC16::modbus_decode(uint8_t* data){
     int size = sizeof(data);
-    uint8_t buff[size - 2];
+    uint8_t buf[size - 2];
 
     for(int i = 0; i < size - 2; i++){
-        buff[i] = data[i];
+        buf[i] = data[i];
     }
 
-    uint8_t* feedback = modbus_encode(buff, sizeof(buff));
+    uint8_t* feedback = modbus_encode(buf, sizeof(buf));
 
     for(int i = 0; i < size; i++){
         if(data[i] != feedback[i]){

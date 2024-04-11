@@ -17,10 +17,6 @@ void _74HC165::setNumBits(int value){
     buff = new uint8_t[this->numBits];
 }
 
-int _74HC165::getNumBits(){
-    return numBits;
-}
-
 uint8_t* _74HC165::getData(){
     latchPin = 0;
     __NOP();
