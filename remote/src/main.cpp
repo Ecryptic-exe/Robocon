@@ -13,8 +13,9 @@ char buff[256] = {0};
 //monitor
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-I2C i2c1(I2C1_SDA, I2C1_SCL);
-Adafruit_SSD1306_I2c display(&i2c1, -1, 0x78, SCREEN_HEIGHT, SCREEN_WIDTH);
+
+uint8_t i2cAdr = 0x78;
+Adafruit_SSD1306_I2c display(&i2c1, -1, i2cAdr, SCREEN_HEIGHT, SCREEN_WIDTH);
 
 
 uint32_t pre_time = 0;
@@ -61,7 +62,7 @@ _74HC165 butt_data(BUTTON_DATA_PIN, CP, nPL, 8);;
 }
 
 void init_oled(){
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x78)) {
+  if(!display.begin(SSD1306_SWITCHCAPVCC, i2cAdr)) {
         const char *error_msg = "SSD1306 allocation failed";
         USB2TTL.write(error_msg, strlen(error_msg));
         for(;;);

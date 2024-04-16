@@ -221,7 +221,7 @@ void remote::encode_joysticks() {
 
 void remote::decode_butts(){
 
-    data = new uint8_t[hc165->getNumBits()];
+    data = new bool[hc165->getNumBits()];
     data = hc165->getData();
 
     DigitalIn HomePin(home_pin);
@@ -337,4 +337,3 @@ void remote::cal_battery_volt(){
     volt_percentage = voltage.Calculate(volt*1000)/1000.0f;
 
 }
-

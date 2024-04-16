@@ -14,10 +14,10 @@ void _74HC165::setNumBits(int value){
         this->numBits = temp*8;
     }
     
-    buff = new uint8_t[this->numBits];
+    buff = new bool[this->numBits];
 }
 
-uint8_t* _74HC165::getData(){
+bool* _74HC165::getData(){
     latchPin = 0;
     __NOP();
     //wait_us(1);

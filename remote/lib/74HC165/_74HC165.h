@@ -11,7 +11,7 @@ class _74HC165
         DigitalOut latchPin;
 
         int numBits = 8;
-        uint8_t* buff;
+        bool* buff;
 
     public:
         /** Creates 74HC165 object with specific content.
@@ -30,7 +30,7 @@ class _74HC165
         void setNumBits(int value);
 
         /* Get the values of 74HC165*/
-        uint8_t* getData();
+        bool* getData();
         int getNumBits();
 };
 
