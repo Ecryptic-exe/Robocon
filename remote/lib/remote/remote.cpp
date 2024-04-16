@@ -1,15 +1,16 @@
 #include "remote.h"
+#include "_74HC165.h"
 
-void remote::setJoystickPins(int x1_pin, int y1_pin, int x2_pin, int y2_pin){
+void remote::setJoystickPins(PinName x1_pin, PinName y1_pin, PinName x2_pin, PinName y2_pin){
     this->x1_pin = x1_pin;
     this->y1_pin = y1_pin;
     this->x2_pin = x2_pin;
     this->y2_pin = y2_pin;
 }
-void remote::setHomePin(int home_pin){
+void remote::setHomePin(PinName home_pin){
     this->home_pin = home_pin;
 }
-void remote::setBattery_Pin(int battery_pin){
+void remote::setBattery_Pin(PinName battery_pin){
     this->battery_level_pin = battery_pin;
 }
 void remote::setSerial(BufferedSerial* serial){
@@ -220,7 +221,7 @@ void remote::encode_joysticks() {
 
 void remote::decode_butts(){
 
-    data = new bool[hc165->getNumBits()];
+    data = new uint8_t[hc165->getNumBits()];
     data = hc165->getData();
 
     DigitalIn HomePin(home_pin);

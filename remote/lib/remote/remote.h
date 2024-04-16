@@ -13,9 +13,9 @@ class remote{
 
         _74HC165* hc165;
 
-        int x1_pin, y1_pin, x2_pin, y2_pin;
-        int home_pin;
-        int battery_level_pin;
+        PinName x1_pin, y1_pin, x2_pin, y2_pin;
+        PinName home_pin;
+        PinName battery_level_pin;
 
         int x_max = 4084;
         int x_mid = 2067;
@@ -43,9 +43,9 @@ class remote{
         float volt_percentage = 0.0f;
 
     public:
-        void setJoystickPins(int x1_pin, int y1_pin, int x2_pin, int y2_name);
-        void setHomePin(int home_pin);
-        void setBattery_Pin(int battery_pin);
+        void setJoystickPins(PinName x1_pin, PinName y1_pin, PinName x2_pin, PinName y2_name);
+        void setHomePin(PinName home_pin);
+        void setBattery_Pin(PinName battery_pin);
         void setSerial(BufferedSerial* serial);
         void set74HC165(_74HC165* hc165);
 

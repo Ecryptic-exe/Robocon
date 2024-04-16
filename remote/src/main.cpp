@@ -1,14 +1,12 @@
-pre_time#include <mbed.h>
+#include <mbed.h>
+#include "pinmapremote.h"
 
-#include "pinmap.h"
 #include "communication_format.h"
 #include "_74HC165.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_SSD1306.h"
 #include "remote.h"
-
-int numBits = 16;
-
+#include "Map.hpp"
 
 char buff[256] = {0};
 
@@ -16,15 +14,14 @@ char buff[256] = {0};
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
 I2C i2c1(I2C1_SDA, I2C1_SCL);
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &i2c1, -1);
+Adafruit_SSD1306_I2c display(&i2c1, -1, 0x78, SCREEN_HEIGHT, SCREEN_WIDTH);
+
 
 uint32_t pre_time = 0;
 uint32_t now_time = 0;
 int off_time_ms = 3000;
 
 //butts status
-int numBits = 16;
-_74HC165 butt_data;
 string pressed_butts = "";
 
 //remote
@@ -32,7 +29,7 @@ remote controller;
 
 Timer timer;
 
-robot_msg in_msg;
+// robot_msg in_msg;
 
 //feedback var from robot
 float robot_volt = 0.0f;
@@ -53,7 +50,7 @@ void turnOff(){
 void init_pinout(){ 
   turnOn();
 
-  butt_data = _74HC165(BUTTON_DATA_PIN, CP, nPL, numBits);;
+_74HC165 butt_data(BUTTON_DATA_PIN, CP, nPL, 8);;
 
   //init controller
   controller.set74HC165(&butt_data);
@@ -64,10 +61,11 @@ void init_pinout(){
 }
 
 void init_oled(){
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    pc.println(F("SSD1306 allocation failed"));
-    for(;;);
-  } 
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x78)) {
+        const char *error_msg = "SSD1306 allocation failed";
+        USB2TTL.write(error_msg, strlen(error_msg));
+        for(;;);
+    }
   // Clear the buffer
   display.clearDisplay();
 }
@@ -76,7 +74,7 @@ void check_off_cmd() {
     now_time = Kernel::get_ms_count(); 
 
     // LOW = pressed
-    if(!PG1.read()){ // Mbed equivalent of digitalRead
+    if(!Home.read()){ // Mbed equivalent of digitalRead
         // Check off command
         if(now_time - pre_time >= off_time_ms){
             turnOff();
@@ -120,9 +118,9 @@ void encode_butts_str(){
   updated_pressed_str("L2", controller.get_L2_flag());
 
   //for debug
-  // pc.printf("up: %d, left: %d, down: %d, right: %d, X: %d, Y: %d, A: %d, B: %d\n", up, left, down, right, X, Y, A, B);
-  // pc.printf("L_switch: %d, R_switch: %d, Estop: %d, Reset: %d, Home: %d\n", L_switch, R_switch, Estop, Reset, Home);
-  // pc.printf("R1: %d, R2: %d, L1: %d, L2: %d\n", R1, R2, L1, L2);
+  // USB2TTL.printf("up: %d, left: %d, down: %d, right: %d, X: %d, Y: %d, A: %d, B: %d\n", up, left, down, right, X, Y, A, B);
+  // USB2TTL.printf("L_switch: %d, R_switch: %d, Estop: %d, Reset: %d, Home: %d\n", L_switch, R_switch, Estop, Reset, Home);
+  // USB2TTL.printf("R1: %d, R2: %d, L1: %d, L2: %d\n", R1, R2, L1, L2);
 }
 
 void decode_robotMsg(){
@@ -137,59 +135,60 @@ void decode_robotMsg(){
 
   LED_G = 1;
 
-  in_msg.voltage[0] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.voltage[1] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.voltage[2] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.voltage[3] = (uint8_t)BLE.read(buff, sizeof(buff));
+//Debug 1
+  // in_msg.voltage[0] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.voltage[1] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.voltage[2] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.voltage[3] = (uint8_t)BLE.read(buff, sizeof(buff));
 
-  in_msg.rpm[0] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.rpm[1] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.rpm[2] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.rpm[3] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.rpm[0] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.rpm[1] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.rpm[2] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.rpm[3] = (uint8_t)BLE.read(buff, sizeof(buff));
 
-  in_msg.angle[0] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.angle[1] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.angle[2] = (uint8_t)BLE.read(buff, sizeof(buff));
-  in_msg.angle[3] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.angle[0] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.angle[1] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.angle[2] = (uint8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.angle[3] = (uint8_t)BLE.read(buff, sizeof(buff));
 
-  in_msg.setting_num = (int8_t)BLE.read(buff, sizeof(buff));
-  in_msg.error_Flag = (int8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.setting_num = (int8_t)BLE.read(buff, sizeof(buff));
+  // in_msg.error_Flag = (int8_t)BLE.read(buff, sizeof(buff));
 
-  //pc.printf("%.2x, %.2x, %.2x, %.2x\n", in_msg.angle[0], in_msg.angle[1], in_msg.angle[2], in_msg.angle[3]);
+  //USB2TTL.printf("%.2x, %.2x, %.2x, %.2x\n", in_msg.angle[0], in_msg.angle[1], in_msg.angle[2], in_msg.angle[3]);
 
-  robot_volt = *(float*)(in_msg.voltage);
-  rpm = *(float*)(in_msg.rpm);
-  angle = *(float*)(in_msg.angle);
+  // robot_volt = *(float*)(in_msg.voltage);
+  // rpm = *(float*)(in_msg.rpm);
+  // angle = *(float*)(in_msg.angle);
 
-  switch (in_msg.setting_num){
-    case (int8_t)0x01:
-      setting_str = "Pole 1";
-      break;
+//   switch (in_msg.setting_num){
+//     case (int8_t)0x01:
+//       setting_str = "Pole 1";
+//       break;
     
-    case (int8_t)0x02:
-      setting_str = "Near Pole 2";
-      break;
+//     case (int8_t)0x02:
+//       setting_str = "Near Pole 2";
+//       break;
 
-    case (int8_t)0x03:
-      setting_str = "Far Pole 2";
-      break;
+//     case (int8_t)0x03:
+//       setting_str = "Far Pole 2";
+//       break;
 
-    case (int8_t)0x04:
-      setting_str = "Pole 3";
-      break;
+//     case (int8_t)0x04:
+//       setting_str = "Pole 3";
+//       break;
     
-    default:
-      setting_str = "Custom";
-      break;
-  }
+//     default:
+//       setting_str = "Custom";
+//       break;
+//   }
 
-  switch(in_msg.error_Flag){
-    case (int8_t)0x01:
-      break;
+//   switch(in_msg.error_Flag){
+//     case (int8_t)0x01:
+//       break;
 
-    default:
-      break;
-  }
+//     default:
+//       break;
+//   }
 }
 
 void display_info(){
@@ -262,8 +261,8 @@ int main(){
   // int y = analogRead(Y1_pin);
   // int w = analogRead(X2_pin);
 
-  //pc.printf("X: %d, Y: %d, W: %d\n", x, y, w);
-  //pc.printf("robot_volt: %.2fV, rpm: %.2f, angle: %.2f\n", robot_volt, rpm, angle);
+  //USB2TTL.printf("X: %d, Y: %d, W: %d\n", x, y, w);
+  //USB2TTL.printf("robot_volt: %.2fV, rpm: %.2f, angle: %.2f\n", robot_volt, rpm, angle);
   }
     return 0;
 }

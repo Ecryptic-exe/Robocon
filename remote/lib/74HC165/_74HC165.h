@@ -31,6 +31,7 @@ class _74HC165
 
         /* Get the values of 74HC165*/
         uint8_t* getData();
+        int getNumBits();
 };
 
 #endif

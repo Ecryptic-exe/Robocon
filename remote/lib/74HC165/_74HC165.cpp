@@ -35,3 +35,7 @@ uint8_t* _74HC165::getData(){
 
     return buff;
 }
+
+int _74HC165::getNumBits(){
+    return numBits;
+}

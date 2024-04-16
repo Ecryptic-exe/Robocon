@@ -182,34 +182,34 @@ public:
 
 	virtual void command(uint8_t c)
 	{
-		char buf[2];
-		buf[0] = 0; // Command Mode
-		buf[1] = c;
-		mi2c.write(mi2cAddress, buf, sizeof(buf));
+		char buff[2];
+		buff[0] = 0; // Command Mode
+		buff[1] = c;
+		mi2c.write(mi2cAddress, buff, sizeof(buff));
 	}
 
 	virtual void data(uint8_t c)
 	{
-		char buf[2];
-		buf[0] = 0x40; // Data Mode
-		buf[1] = c;
-		mi2c.write(mi2cAddress, buf, sizeof(buf));
+		char buff[2];
+		buff[0] = 0x40; // Data Mode
+		buff[1] = c;
+		mi2c.write(mi2cAddress, buff, sizeof(buff));
 	};
 
 protected:
 	virtual void sendDisplayBuffer()
 	{
-		char buf[17];
-		buf[0] = 0x40; // Data Mode
+		char buff[17];
+		buff[0] = 0x40; // Data Mode
 
 		// send display buffer in 16 byte chunks
 		for(uint16_t i=0, q=buffer.size(); i<q; i+=16 ) 
 		{	uint8_t x ;
 
 			// TODO - this will segfault if buffer.size() % 16 != 0
-			for(x=1; x<sizeof(buf); x++) 
-				buf[x] = buffer[i+x-1];
-			mi2c.write(mi2cAddress, buf, sizeof(buf));
+			for(x=1; x<sizeof(buff); x++) 
+				buff[x] = buffer[i+x-1];
+			mi2c.write(mi2cAddress, buff, sizeof(buff));
 		}
 	};
 
