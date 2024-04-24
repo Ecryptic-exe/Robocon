@@ -3,8 +3,10 @@
 
 #include "communication_format.h"
 #include "_74HC165.h"
-#include "Adafruit_GFX.h"
-#include "Adafruit_SSD1306.h"
+// #include "Adafruit_GFX.h"
+// #include "Adafruit_SSD1306.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
 #include "remote.h"
 #include "Map.hpp"
 
@@ -13,9 +15,6 @@ char buff[256] = {0};
 //monitor
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 64
-
-uint8_t i2cAdr = 0x78;
-Adafruit_SSD1306_I2c display(&i2c1, -1, i2cAdr, SCREEN_HEIGHT, SCREEN_WIDTH);
 
 
 uint32_t pre_time = 0;
@@ -38,6 +37,44 @@ float rpm = 0.0f; //common var
 float angle = 0.0f; //common var
 string setting_str = "";  //common var
 
+
+I2C_HandleTypeDef hi2c1;
+
+//////////////////////////////////////////////////////////////////
+void MX_I2C1_Init(void)
+{
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+
+  // Configure the SCL and SDA pins
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  
+  /**I2C1 GPIO Configuration    
+  PB6     ------> I2C1_SCL
+  PB7     ------> I2C1_SDA 
+  */
+  GPIO_InitStruct.Pin = GPIO_PIN_6 | GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  HAL_I2C_Init(&hi2c1);
+}
+//////////////////////////////////////////////////////////////////
+
+
+
+
 void turnOn(){
   PG2 = 1;
   LED_Y = 1;
@@ -59,16 +96,6 @@ _74HC165 butt_data(BUTTON_DATA_PIN, CP, nPL, 8);;
   controller.setJoystickPins(X1, Y1, X2, Y2);
   controller.setHomePin(PG1);
   controller.setBattery_Pin(BAT_LV);
-}
-
-void init_oled(){
-  if(!display.begin(SSD1306_SWITCHCAPVCC, i2cAdr)) {
-        const char *error_msg = "SSD1306 allocation failed";
-        USB2TTL.write(error_msg, strlen(error_msg));
-        for(;;);
-    }
-  // Clear the buffer
-  display.clearDisplay();
 }
 
 void check_off_cmd() {
@@ -192,42 +219,91 @@ void decode_robotMsg(){
 //   }
 }
 
+
+void display_voltage() {
+  char volt_buffer[10]; 
+  int voltage = controller.get_volt(); 
+
+
+  sprintf(volt_buffer, "%d%%", voltage);
+
+
+  ssd1306_SetCursor(0, 0);
+  ssd1306_WriteString("V:", Font_6x8, White);
+  ssd1306_WriteString(volt_buffer, Font_6x8, White);
+  ssd1306_WriteString("V", Font_6x8, White);
+}
+
+void display_voltage_percentage() {
+  char volt_per_buffer[10]; 
+  int voltage = controller.get_volt_percentage(); 
+
+  sprintf(volt_per_buffer, "%d%%", voltage);
+
+  ssd1306_SetCursor(55, 0); 
+  ssd1306_WriteString("V:", Font_6x8, White); 
+  ssd1306_WriteString(volt_per_buffer, Font_6x8, White); 
+  ssd1306_WriteString("%", Font_6x8, White); 
+}
+
+void display_analog_x(){
+  char al_x[10];
+  sprintf(al_x, "X:%d", controller.get_x1());
+
+  ssd1306_SetCursor(0, 20);
+  ssd1306_WriteString(al_x, Font_6x8, White);
+}
+
+void display_analog_y(){
+  char al_y[10];
+  sprintf(al_y, "Y:%d", controller.get_y1());
+
+  ssd1306_SetCursor(45, 20);
+  ssd1306_WriteString(al_y, Font_6x8, White);
+}
+
+void display_analog_w(){
+  char al_w[10];
+  sprintf(al_w, "Y:%d", controller.get_x1());
+
+  ssd1306_SetCursor(90, 20);
+  ssd1306_WriteString(al_w, Font_6x8, White);
+}
+
+void display_pressed_buttons(){
+
+  char pressed_buttons[10];
+  sprintf(pressed_buttons, "%d", pressed_butts);
+  ssd1306_SetCursor(0, 40);
+  ssd1306_WriteString("Pressed: ", Font_6x8, White);
+  ssd1306_WriteString(pressed_buttons, Font_6x8, White);
+
+}
+
 void display_info(){
-  display.clearDisplay();
+  ssd1306_Fill(Black);
+  
+  display_voltage();
 
-  display.setTextSize(1);      // Normal 1:1 pixel scale
-  display.setTextColor(WHITE); // Draw white text
+  display_voltage_percentage();
 
-  display.setTextCursor(0, 0);
-  display.printf("V: ");
-  display.printf("%d",controller.get_volt(), 2);
-  display.printf("V");
+  display_analog_x();
 
-  display.setTextCursor(55, 0);
-  display.printf("%d",controller.get_volt_percentage(), 2);
-  display.printf("%");
+  display_analog_y();
 
-  display.setTextCursor(0, 20);
-  display.printf("X:%d", controller.get_x1());
-  display.setTextCursor(45, 20);
-  display.printf("Y:%d", controller.get_y1());
-  display.setTextCursor(90, 20);
-  display.printf("W:%d", controller.get_x2());
+  display_analog_w();
 
-  display.setTextCursor(0, 40);
-  display.printf("Pressed: ");
-  display.printf("%d",pressed_butts);
+  display_pressed_buttons();
 
-  display.display(); 
+  ssd1306_UpdateScreen();
 }
 
 
-
-
 int main(){
+  MX_I2C1_Init();
 // Setup
   init_pinout();
-  init_oled();
+  ssd1306_Init();
 
   BLE.set_baud(115200);
   BLE.set_format(
@@ -235,8 +311,6 @@ int main(){
       /* parity */ BufferedSerial::None,
       /* stop bit */ 1
   );
-
-  i2c1.frequency(100000); // 100kHz
 
   while (true){
     // Loop
@@ -262,8 +336,8 @@ int main(){
   // int y = analogRead(Y1_pin);
   // int w = analogRead(X2_pin);
 
-  //USB2TTL.printf("X: %d, Y: %d, W: %d\n", x, y, w);
-  //USB2TTL.printf("robot_volt: %.2fV, rpm: %.2f, angle: %.2f\n", robot_volt, rpm, angle);
+  // USB2TTL.printf("X: %d, Y: %d, W: %d\n", x, y, w);
+  // USB2TTL.printf("robot_volt: %.2fV, rpm: %.2f, angle: %.2f\n", robot_volt, rpm, angle);
   }
     return 0;
 }

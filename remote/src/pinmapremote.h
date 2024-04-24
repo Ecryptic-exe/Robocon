@@ -105,4 +105,6 @@ DigitalInOut JUMPER_PC11 (PC_11);
 DigitalOut BLE_RST (PC_12);
 DigitalOut PC13 (PC_13);
 
+PinName NRST;
+
 #endif
