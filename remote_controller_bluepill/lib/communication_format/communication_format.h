@@ -2,6 +2,7 @@
 #define COMMUNICATION_FORMAT_H
 
 #include "Arduino.h"
+#include "CRC16.h"
 
 #define start_byte 0x7f
 #define zero_byte 0x9f

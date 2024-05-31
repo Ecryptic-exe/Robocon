@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "IWatchdog.h"
 
+#include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -35,11 +36,13 @@ HardwareTimer timer;
 
 robot_msg in_msg;
 
+
 //feedback var from robot
 float robot_volt = 0.0f;
 float rpm = 0.0f; //common var
 float angle = 0.0f; //common var
 String setting_str = "";  //common var
+
 
 void turnOn(){
   digitalWrite(PG2, HIGH);
@@ -74,6 +77,9 @@ void init_pinout(){
   pinMode(led3, OUTPUT);
   pinMode(buzzer, OUTPUT);
 
+  pinMode(BLE_reset, OUTPUT);
+  pinMode(BLE_Mod, OUTPUT);
+
   turnOn();
 
   analogReadResolution(12);
@@ -92,15 +98,7 @@ void init_pinout(){
 
 void init_oled(){
   // Init OLED display on bus number 0
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x78)) {
-    pc.printf(F("SSD1306 allocation failed"));
-    for(;;);
-  } 
-  // Clear the buffer
-  display.clearDisplay();
-
-  // Init OLED display on bus number 0
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x78)) {
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     pc.printf(F("SSD1306 allocation failed"));
     for(;;);
   } 
@@ -126,6 +124,7 @@ void check_off_cmd(){
   }
   else{
     pre_time = now_time;
+
   }
 }
 
@@ -257,7 +256,8 @@ void decode_robotMsg(){
   }
 }
 
-void display_info(){
+void display_info1(){
+  //mon1
   display.clearDisplay();
 
   display.setTextSize(1);      // Normal 1:1 pixel scale
@@ -284,7 +284,10 @@ void display_info(){
   display.print(pressed_butts);
 
   display.display(); 
+}
 
+void display_info2(){
+//mon2
   display.clearDisplay();
   display.setTextSize(1);      // Normal 1:1 pixel scale
   display.setTextColor(WHITE); // Draw white text
@@ -309,26 +312,42 @@ void display_info(){
   display.display(); 
 }
 
+
 void setup() {
   init_pinout();
   init_oled();
 
+  digitalWrite(BLE_Mod, HIGH);
+  digitalWrite(BLE_reset, HIGH);
   BLE.begin(115200);
+
   // init_BLE();
   //for debug
   pc.begin(115200);
-
+  
   //watchdog avoid lagging
   IWatchdog.begin(3000000); //3s
+
 }
+
+
 
 void loop() {
   check_off_cmd();
 
-//test function
-  digitalWrite(BLE_Mod,LOW);
-  BLE.write("AT \r\n");
-  pc.write("test \r\n");
+// //test function
+//   digitalWrite(BLE_Mod,LOW);
+//   delay(3000);
+//   if (digitalRead(BLE_Mod==LOW)){
+//     BLE.write("AT\r\n");
+//   }
+  
+    // String data = BLE.readString();
+    // pc.print("Data received: ");
+    // pc.print(data);
+    // BLE.write("test send\r\n");
+
+
 
   controller.refresh_msg();
   controller.encode_joysticks();
@@ -343,14 +362,19 @@ void loop() {
   //get the feedback data from robot
   decode_robotMsg();
   controller.cal_battery_volt();
-  display_info();
+
+  //Switch page with home
+  if(controller.get_home_flag()){
+    display_info2();
+  }
+  else display_info1(); 
 
   IWatchdog.reload();
 
 // BLE Reset Debug
-  if (digitalRead(BLE_reset)==LOW){
-    pc.printf("BLE Reset");
-  }
+  // if (digitalRead(BLE_reset)==LOW){
+  //   pc.printf("BLE Reset");
+  // }
 
   //for debug
   // int x = analogRead(X1_pin);
@@ -359,5 +383,4 @@ void loop() {
 
   // pc.printf("X: %d, Y: %d, W: %d \r\n", x, y, w);
   // pc.printf("robot_volt: %.2fV, rpm: %.2f, angle: %.2f\n", robot_volt, rpm, angle);
-  delay(300);
 }
